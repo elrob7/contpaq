@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de instalación SQL Server 2019 y CONTPAQi 19.31</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #24292e;
+      --muted: #6a737d;
+      --border: #e1e4e8;
+      --code-bg: #f6f8fa;
+      --link: #0366d6;
+      --menu-bg: #f6f8fa;
+      --menu-active: #0366d6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      gap: 32px;
+    }
+
+    /* ===== MENÚ LATERAL ===== */
+    .sidebar {
+      flex: 0 0 260px;
+      position: sticky;
+      top: 24px;
+      align-self: flex-start;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      background: var(--menu-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .sidebar h3 {
+      margin: 0 0 12px 0;
+      font-size: 1em;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .sidebar nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sidebar nav ul li {
+      margin: 0;
+    }
+
+    .sidebar nav ul li a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      transition: background .15s, color .15s;
+    }
+
+    .sidebar nav ul li a:hover {
+      background: #e1e4e8;
+      color: var(--menu-active);
+      text-decoration: none;
+    }
+
+    .sidebar nav ul li a.active {
+      background: var(--menu-active);
+      color: #fff;
+    }
+
+    /* Submenú */
+    .sidebar nav ul li ul {
+      margin-left: 12px;
+      border-left: 2px solid var(--border);
+      padding-left: 4px;
+    }
+
+    .sidebar nav ul li ul li a {
+      font-size: 13px;
+      padding: 5px 8px;
+      color: var(--muted);
+    }
+
+    /* ===== CONTENIDO ===== */
+    .content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    h1, h2, h3 {
+      margin-top: 24px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      line-height: 1.25;
+      scroll-margin-top: 20px;
+    }
+
+    h1 {
+      font-size: 2em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: .3em;
+    }
+
+    h2 {
+      font-size: 1.5em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: .3em;
+    }
+
+    h3 {
+      font-size: 1.25em;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    ul, ol {
+      margin-bottom: 16px;
+      padding-left: 2em;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    code {
+      background: var(--code-bg);
+      padding: .2em .4em;
+      border-radius: 3px;
+      font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 85%;
+    }
+
+    pre {
+      background: var(--code-bg);
+      padding: 16px;
+      overflow: auto;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: 100%;
+    }
+
+    strong {
+      font-weight: 600;
+    }
+
+    hr {
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    a {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Botón subir */
+    .to-top {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--menu-active);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    .to-top.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .to-top:hover {
+      text-decoration: none;
+      background: #0250a8;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .layout {
+        flex-direction: column;
+        padding: 16px;
+        gap: 16px;
+      }
+
+      .sidebar {
+        position: static;
+        flex: none;
+        width: 100%;
+        max-height: none;
+        overflow: visible;
+      }
+
+      .sidebar nav ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .sidebar nav ul li {
+        flex: 0 0 auto;
+      }
+
+      .sidebar nav ul li a {
+        background: #fff;
+        border: 1px solid var(--border);
+        font-size: 13px;
+        padding: 6px 10px;
+      }
+
+      .sidebar nav ul li ul {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="layout">
+
+    <!-- ===== MENÚ LATERAL ===== -->
+    <aside class="sidebar">
+      <h3>Índice</h3>
+      <nav>
+        <ul>
+          <li><a href="#desinstalar">1. Desinstalar programas</a></li>
+          <li><a href="#framework">2. Activar Framework 3.5</a></li>
+          <li>
+            <a href="#sql">3. Instalar SQL Server 2019</a>
+            <ul>
+              <li><a href="#sql-config">Configuración de red</a></li>
+            </ul>
+          </li>
+          <li><a href="#contpaqi">4. Instalar CONTPAQi</a></li>
+          <li><a href="#activar">5. Activar CONTPAQi</a></li>
+          <li>
+            <a href="#extras">6. Extras</a>
+            <ul>
+              <li><a href="#servicio">Servicio Servidor CONTPAQi</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- ===== CONTENIDO ===== -->
+    <main class="content">
+
+      <h1 id="inicio">Manual de instalación: SQL Server 2019 y CONTPAQi</h1>
+
+      <h2 id="desinstalar">1. Desinstalar Todos los programas de SQL y CONTPAQi</h2>
+      <p>Desinstalar Todos los programas de SQL y CONTPAQi instalados.</p>
+      <p>Utilizar la herramienta de Geek y quitar los rastros del programa en cada programa desinstalado.</p>
+      <a href="https://github.com/elrob7/contpaq/raw/refs/heads/main/geek.exe" class="btn" target="_blank">Descargar Geek</a>
+
+      <hr>
+
+      <h2 id="framework">2. Activar Framework 3.5</h2>
+      <p>Ingresar a <strong>cmd</strong> y ejecutar como administrador y pegar esto:</p>
+
+      <pre><code>DISM /Online /Enable-Feature /FeatureName:NetFx3 /All</code></pre>
+
+      <p>Si aún no lo activa o aparece un error probar con este comando:</p>
+
+      <pre><code>DISM /Online /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:X:\sources\sxs</code></pre>
+
+      <hr>
+
+      <h2 id="sql">3. Instalar SQL Server 2019</h2>
+      <a href="https://github.com/elrob7/contpaq/raw/refs/heads/main/SQL2019-SSEI-Expr.exe" class="btn" target="_blank">Descargar SQL Server 2019</a>
+
+      <ol>
+        <li>Ejecutar el archivo descargado SQL2019-SSEI-Expr.exe y seleccionar Download Media, seleccionar idioma y donde lo descargara y dar en download (lo guardará en descargas)</li>
+        <li>Extraer el archivo <code>SQLEXPR_x64_ESN.exe </code></li>
+        <li>Crea una carpeta <code>SQLEXPR_x64_ESN</code>, entra y ejecutar <strong>SETUP</strong></li>
+        <li>Nueva instalación independiente de SQL Server o agregar características a una instalación existente</li>
+        <li>Aceptar términos de licencia y declaración de privacidad y siguiente</li>
+        <li>No Usar Microsoft Update para comprobar actualizaciones (dejar desmarcada la casilla)</li>
+        <li>Características de instancia no mover y siguiente</li>
+        <li>Nombra la instancia como deseen pero que no sea como instancias anteriores, en instancia con nombre, <strong>COMPAC2019</strong> siguiente</li>
+        <li>En el apartado de <strong>SQL Server Browser</strong> en el tipo de inicio seleccionar <strong>automático</strong>. Siguiente</li>
+        <li>En el modo de autenticación poner <strong>modo mixto</strong> (autenticación de SQL Server y de Windows), escribir una contraseña sencilla y que no se olvide y confirmarla,</li>
+        <li>En la especificación de los administradores de SQL Server, seleccionamos el botón de agregar y en el nombre del objeto escribimos <strong>“todos”</strong> y aceptar, abrirá una ventana donde seleccionamos <strong>Todos</strong> y luego seleccionamos <strong>TODOS EN EL</strong> aceptar y</li>
+        <li>Seleccionamos de la lista <strong>\Todos (Todos)</strong> luego siguiente</li>
+        <li>Esperamos a que termine la instalación y todo debe estar correcto luego cerrar.</li>
+      </ol>
+
+      <h3 id="sql-config">Configuración de red de SQL Server</h3>
+
+      <ol>
+        <li>Abrir <strong>Administrador de configuración de SQL Server</strong>.</li>
+        <li>Expandir la sección <strong>Configuración de red de SQL Server</strong>, seleccionar el protocolo de y el nombre de la instancia en este caso <strong>“COMPAC2019”</strong></li>
+        <li>Del lado derecho seleccionar <strong>TCP/IP</strong> que esta como <em>Deshabilitado</em> y clic derecho y <strong>Habilitar</strong> y aceptar, igual con el proceso de <strong>Canalización con nombre</strong>.</li>
+        <li>Luego vamos a <strong>Servicios de SQLServer</strong> Buscamos <strong>SQL Server (COMPAC2019)</strong>, clic derecho y propiedades y damos <strong>Iniciar sesión como: Cuenta integrada</strong> y seleccionamos <strong>Sistema local</strong> luego aplicar y <strong>¿Desea continuar?</strong> Si y luego aceptar.</li>
+        <li>Seleccionamos Ahora <strong>SQL Server Browser</strong> Clic derecho y <strong>reiniciar</strong>.</li>
+        <li>Cerrar todo y podemos instalar CONTPAQi</li>
+      </ol>
+
+      <hr>
+
+      <h2 id="contpaqi">4. Instalar CONTPAQi</h2>
+      <p><strong>Descargarlo:</strong></p>
+      <a href="https://descargas.contpaqi.com/repositorios/fls/evaluacion/CONTPAQi/sistema/19.3.1/CONTABILIDAD_BANCOS_1931_898.zip" class="btn" target="_blank">Descargar CONTPAQ i Contabilidad-Bancos 19.3.1</a>
+
+      <ol>
+        <li>Extraer el contenido y ejecutar <strong>CONTPAQi</strong></li>
+        <li>Siguiente, acepto los términos y siguiente.</li>
+        <li>Aceptar términos y acuerdo y siguiente.</li>
+        <li>Luego <strong>CONTPAQi</strong> seleccionado y siguiente.</li>
+        <li><strong>Local</strong> seleccionado y siguiente.</li>
+        <li>Seleccionar <strong>Instalar el Servidor de Aplicaciones CONTPAQ i como un servicio de Windows</strong></li>
+        <li>En la parte de rutas dar siguiente</li>
+        <li>Selecciona en el <strong>Servidor de bases de datos</strong> <code>(local)\COMPAC2019</code>, luego poner la contraseña que se asignó en la instancia.</li>
+        <li>Aparecerá que la <strong>Conexión SQL</strong> se realizó de manera exitosa y dar aceptar</li>
+        <li>Luego instalar, esperar a que termine</li>
+        <li>Seleccionar <strong>Lea detenidamente el listado….</strong> Luego continuar</li>
+        <li>Luego siguiente, aceptar términos y siguiente</li>
+        <li><strong>Local</strong> y siguiente, siguiente y siguiente, Seleccionar la instancia y poner de nuevo la contraseña y esperar y finalizar</li>
+        <li><strong>Reiniciar el equipo</strong></li>
+      </ol>
+
+      <hr>
+
+      <h2 id="activar">5. Activar CONTPAQ i</h2>
+
+      <ol>
+        <li>Siguiente</li>
+        <li>Activación por internet, siguiente</li>
+        <li>Activar con numero de serie y siguiente</li>
+        <li>Luego aceptar, siguiente</li>
+        <li>Pegar el número de serie y siguiente</li>
+        <li>Luego siguiente</li>
+        <li>Seleccionar <strong>contabilidad</strong></li>
+        <li>Luego activar producto y finalizar</li>
+      </ol>
+
+      <hr>
+
+      <h2 id="extras">6. Extras</h2>
+
+      <h3 id="servicio">Iniciar el servicio Servidor CONTPAQ i</h3>
+      <p>Windows + R ejecutar: <code>serrvices.msc</code></p>
+      <p>iniciar...</p>
+
+      <p><strong>Windows no pudo iniciar el servicio SERVIDOR CONTPAQi</strong></p>
+      <p><strong>SOLUCIÓN:</strong></p>
+
+      <ul>
+        <li>Ir a <strong>Inicio/Ejecutar/Regedit</strong></li>
+        <li>Ir a <code>HKEY_LOCAL_MACHINE &gt; SYSTEM &gt; CurrentControlSet &gt; Control</code></li>
+        <li>Con la carpeta de <strong>control</strong> seleccionada, haga clic derecho en el panel de la derecha y seleccione <strong>nuevo &gt; Valor de DWORD</strong></li>
+        <li>Nombra el nuevo DWORD: <code>ServicesPipeTimeout</code></li>
+        <li>Haga clic en con el botón derecho en <code>ServicesPipeTimeout</code> y luego clic en <strong>modificar</strong></li>
+        <li>Haga clic en <strong>Decimal</strong>, escriba <code>'180000'</code></li>
+        <li>Guardar y cerrar el Regedit</li>
+        <li>Reiniciar equipo y verificar el servicio inicie correctamente.</li>
+      </ul>
+
+    </main>
+  </div>
+
+  <!-- Botón subir -->
+  <a href="#inicio" class="to-top" id="toTop" title="Volver arriba">↑</a>
+
+  <script>
+    // Resaltar el link activo según la sección visible
+    const links = document.querySelectorAll('.sidebar nav a[href^="#"]');
+    const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+
+    function onScroll() {
+      const scrollPos = window.scrollY + 120;
+      let current = null;
+      sections.forEach(sec => {
+        if (sec.offsetTop <= scrollPos) current = sec.id;
+      });
+      links.forEach(l => {
+        l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+      });
+
+      // Botón subir
+      document.getElementById('toTop').classList.toggle('show', window.scrollY > 300);
+    }
+
+    window.addEventListener('scroll', onScroll);
+    window.addEventListener('load', onScroll);
+  </script>
+
+</body>
+</html>
