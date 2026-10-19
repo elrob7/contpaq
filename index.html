@@ -463,6 +463,11 @@ function Fix-Key {
 Fix-Key "SYSTEM\CurrentControlSet\Services\wuauserv"
 Fix-Key "SYSTEM\CurrentControlSet\Services\WaaSMedicSvc"
 Fix-Key "SYSTEM\CurrentControlSet\Services\UsoSvc"    </li>
+
+
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\wuauserv" -Name "Start" -Value 2
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\WaaSMedicSvc" -Name "Start" -Value 2
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\UsoSvc" -Name "Start" -Value 2   
       </ul>
 
     </main>
