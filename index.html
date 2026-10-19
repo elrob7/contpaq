@@ -405,7 +405,64 @@
         <li>Haga clic en <strong>Decimal</strong>, escriba <code>'180000'</code></li>
         <li>Guardar y cerrar el Regedit</li>
         <li>Reiniciar equipo y verificar el servicio inicie correctamente.</li>
-        <li>sc.exe sdset wuauserv D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)   </li>
+        <li># --- Habilitar privilegio ---
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class AdjPriv {
+  [DllImport("advapi32.dll", ExactSpelling=true, SetLastError=true)]
+  internal static extern bool AdjustTokenPrivileges(IntPtr htok, bool disall,
+    ref TokPriv1Luid newst, int len, IntPtr prev, IntPtr relen);
+  [DllImport("advapi32.dll", ExactSpelling=true, SetLastError=true)]
+  internal static extern bool OpenProcessToken(IntPtr h, int acc, ref IntPtr phtok);
+  [DllImport("advapi32.dll", SetLastError=true)]
+  internal static extern bool LookupPrivilegeValue(string host, string name, ref long pluid);
+  [StructLayout(LayoutKind.Sequential, Pack=1)]
+  internal struct TokPriv1Luid { public int Count; public long Luid; public int Attr; }
+  internal const int SE_PRIVILEGE_ENABLED = 0x00000002;
+  internal const int TOKEN_QUERY = 0x00000008;
+  internal const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
+  public static bool EnablePrivilege(long processHandle, string privilege, bool disable) {
+    bool retVal; TokPriv1Luid tp;
+    IntPtr hproc = new IntPtr(processHandle); IntPtr htok = IntPtr.Zero;
+    retVal = OpenProcessToken(hproc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref htok);
+    tp.Count = 1; tp.Luid = 0;
+    tp.Attr = disable ? 0 : SE_PRIVILEGE_ENABLED;
+    retVal = LookupPrivilegeValue(null, privilege, ref tp.Luid);
+    retVal = AdjustTokenPrivileges(htok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
+    return retVal;
+  }
+}
+"@
+
+$handle = (Get-Process -Id $PID).Handle
+[AdjPriv]::EnablePrivilege($handle, "SeTakeOwnershipPrivilege", $false) | Out-Null
+
+# --- Función para tomar propiedad y dar Full Control ---
+function Fix-Key {
+  param([string]$Path)
+  $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($Path, [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree, [System.Security.AccessControl.RegistryRights]::TakeOwnership)
+  if ($key -eq $null) { Write-Host "NO ENCONTRADA: $Path" -ForegroundColor Red; return }
+
+  # Primer paso: ACL vacía (sin permisos)
+  $acl = $key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::None)
+  $owner = [System.Security.Principal.NTAccount]"$env:USERDOMAIN\$env:USERNAME"
+  $acl.SetOwner($owner)
+  $key.SetAccessControl($acl)
+
+  # Segundo paso: ahora sí con permisos
+  $acl = $key.GetAccessControl()
+  $rule = New-Object System.Security.AccessControl.RegistryAccessRule("$env:USERDOMAIN\$env:USERNAME", "FullControl", "Allow")
+  $acl.SetAccessRule($rule)
+  $key.SetAccessControl($acl)
+  $key.Close()
+  Write-Host "OK: $Path" -ForegroundColor Green
+}
+
+# --- Aplicar a los 3 servicios ---
+Fix-Key "SYSTEM\CurrentControlSet\Services\wuauserv"
+Fix-Key "SYSTEM\CurrentControlSet\Services\WaaSMedicSvc"
+Fix-Key "SYSTEM\CurrentControlSet\Services\UsoSvc"    </li>
       </ul>
 
     </main>
